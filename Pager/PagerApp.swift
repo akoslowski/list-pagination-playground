@@ -26,7 +26,7 @@ let randomData = RandomData(minimumNumberOfElements: 25)
 
     var body: some Scene {
         WindowGroup {
-            ContentView<PageItem>()
+            ListView<PageItem>()
                 .environment(model)
         }
     }

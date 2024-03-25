@@ -53,31 +53,42 @@ import SwiftUI
     }
 }
 
-@MainActor struct ContentView<Element: Hashable>: View {
+@MainActor struct ListView<Element: Hashable>: View {
 
     @Environment(Model<Element>.self) var model: Model<Element>
+    @State private var navigationBarTint: Color = .white
 
     var body: some View {
         ZStack(alignment: .bottom) {
             NavigationStack {
                 List(0..<model.state.items.endIndex, id: \.self) { index in
-                    RowView(
-                        index: index,
-                        content: model.description(forItemAtIndex: index)
-                    )
-                    .task {
-                        // Without the additional task, the disappearing of the row will also cancel the loading of the next page.
-                        let task = Task {
-                            await model.reportAppearance(ofItemAtIndex: index)
+                    NavigationLink {
+                        DetailView(
+                            index: index,
+                            text: model.description(forItemAtIndex: index),
+                            tint: $navigationBarTint
+                        )
+                    } label: {
+                        RowView(
+                            index: index,
+                            content: model.description(forItemAtIndex: index)
+                        )
+                        .task {
+                            // Without the additional task, the disappearing of the row will also cancel the loading of the next page.
+                            let task = Task {
+                                await model.reportAppearance(ofItemAtIndex: index)
+                            }
+                            await task.value
                         }
-                        await task.value
                     }
+                    .listRowBackground(rowBackgroundColor(at: index))
                 }
                 .listStyle(.plain)
                 .navigationTitle("List")
                 .toolbarBackground(.visible, for: .navigationBar)
                 .background(model.state.currentBackgroundColor)
             }
+            .tint(navigationBarTint)
 
             if model.state.isLoading {
                 ProgressView("loading")
@@ -121,11 +132,7 @@ extension ListState {
             return .clear
         }
 
-        return Color(
-            hue: Double(lastIndex % 100)/100,
-            saturation: 1.0,
-            brightness: 1.0
-        )
+        return rowBackgroundColor(at: lastIndex)
     }
 }
 
@@ -136,7 +143,7 @@ fileprivate func defaultDescription<Element>(index: Int, value: Element) -> Stri
 }
 
 #Preview("List") {
-    ContentView<Int>()
+    ListView<Int>()
         .environment(
             Model<Int>(
                 lastElementsCount: 8,
@@ -148,7 +155,7 @@ fileprivate func defaultDescription<Element>(index: Int, value: Element) -> Stri
 }
 
 #Preview("List with strings") {
-    ContentView<String>()
+    ListView<String>()
         .environment(
             Model<String>(
                 lastElementsCount: 8,
@@ -160,7 +167,7 @@ fileprivate func defaultDescription<Element>(index: Int, value: Element) -> Stri
 }
 
 #Preview("List with random failures") {
-    ContentView<Int>()
+    ListView<Int>()
         .environment(
             Model<Int>(
                 lastElementsCount: 1,
@@ -177,7 +184,7 @@ fileprivate func defaultDescription<Element>(index: Int, value: Element) -> Stri
 }
 
 #Preview("Errrror") {
-    ContentView<Int>()
+    ListView<Int>()
         .environment(
             Model<Int>(
                 moreItems: { throw URLError(.badURL) },
@@ -187,7 +194,7 @@ fileprivate func defaultDescription<Element>(index: Int, value: Element) -> Stri
 }
 
 #Preview("Empty") {
-    ContentView<Int>()
+    ListView<Int>()
         .environment(
             Model<Int>(
                 moreItems: { [] },
