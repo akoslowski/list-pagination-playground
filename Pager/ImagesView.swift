@@ -1,17 +1,5 @@
 import SwiftUI
 
-@Observable @MainActor final class ImageFetcher {
-    let url: URL
-    
-    init(url: URL) {
-        self.url = url
-    }
-
-    func resizedImage() {
-        
-    }
-}
-
 @Observable @MainActor final class ImagesModel {
 
     private(set) var state: ListState<PicsumAPI.Metadata> = .initial
@@ -55,36 +43,37 @@ struct ImagesView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .center, spacing: 0, pinnedViews: []) {
-                ForEach(model.state.items) { p in
+                ForEach(model.state.items) { imageItem in
                     ZStack(alignment: .bottomLeading) {
-
-//                        AsyncImage(url: p.downloadURL) { image in
-//                            image.resizable().aspectRatio(contentMode: .fill)
-//
-//                        } placeholder: {
-//                            ProgressView()
-//                                .frame(maxWidth: .infinity, minHeight: 200)
-//                        }
-//                        .frame(maxWidth: .infinity)
-                        VStack {
-                            Text("\(UIScreen.main.bounds.size.width)x\(UIScreen.main.bounds.size.height)@\(UIScreen.main.scale)")
-
-                            Text("\(p.width)x\(p.height) (\(Double(p.width)/Double(p.height)))")
-
-                            Text(p.author)
-                                .padding(8)
-                                .background(Capsule().foregroundStyle(.ultraThinMaterial))
-                                .padding()
+                        AsyncImage(
+                            url: imageItem.downloadURL(
+                                size: .size(
+                                    width: 400,
+                                    height: 400
+                                )
+                            )
+                        ) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            ProgressView()
+                                .frame(width: 400, height: 400)
                         }
+                        .frame(maxWidth: .infinity)
+
+                        Text(imageItem.author)
+                            .padding(8)
+                            .background(Capsule().foregroundStyle(.ultraThinMaterial))
+                            .padding()
                     }
                     .frame(maxWidth: .infinity)
                     .task {
-                        await model.reportAppearance(p)
+                        await model.reportAppearance(imageItem)
                     }
                 }
             }
         }
-
         .task {
             await model.load()
         }

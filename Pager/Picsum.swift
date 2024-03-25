@@ -6,6 +6,17 @@ actor PicsumAPI {
         let list: [Metadata]
     }
 
+    enum BlurRadius: Int {
+        case small = 1
+        case medium = 5
+        case large = 10
+    }
+
+    enum ImageSize {
+        case size(width: Int, height: Int)
+        case original
+    }
+
     struct Metadata: Decodable, Identifiable {
         enum CodingKeys: String, CodingKey {
             case id, author, width, height, url
@@ -18,6 +29,31 @@ actor PicsumAPI {
         let height: Int
         let url: URL
         let downloadURL: URL
+
+        var imageBaseURL: URL {
+            // https://picsum.photos/id/48/5000/3333 -> https://picsum.photos/id/48
+            downloadURL
+                .deletingLastPathComponent()
+                .deletingLastPathComponent()
+        }
+
+        func downloadURL(size: ImageSize, blur: BlurRadius? = nil, grayscale: Bool = false) -> URL {
+            var url = switch size {
+            case .original:
+                downloadURL
+            case .size(width: let width, height: let height):
+                imageBaseURL
+                    .appending(path: "\(width)")
+                    .appending(path: "\(height)")
+            }
+            if let blur {
+                url.append(queryItems: [.init(name: "blur", value: "\(blur.rawValue)")])
+            }
+            if grayscale {
+                url.append(queryItems: [.init(name: "grayscale", value: nil)])
+            }
+            return url
+        }
     }
 
     func fetchList(page: Int = 10, limit: Int = 5) async throws -> Response {
