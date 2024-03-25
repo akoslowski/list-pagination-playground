@@ -5,22 +5,15 @@ struct RowView: View {
     let index: Int
     let content: String
 
-    private func rowBackgroundColor(at index: Int) -> Color {
-        Color(
-            hue: Double(index % 100)/100,
-            saturation: 1.0,
-            brightness: 1.0
-        )
-    }
-
     var body: some View {
         LabeledContent {
             Text(content).monospaced()
         } label: {
             Text("\(index, format: .number)").bold()
         }
+        .contentShape(Rectangle())
         .padding(.vertical, 8)
-        .foregroundStyle(rowBackgroundColor(at: index).contrasting(contrastRatio: 4.5))
+        .foregroundStyle(contrastingTextColor(at: index))
         .listRowBackground(rowBackgroundColor(at: index))
     }
 }

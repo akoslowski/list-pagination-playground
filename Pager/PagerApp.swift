@@ -27,7 +27,7 @@ let randomData = RandomData(minimumNumberOfElements: 25)
     var body: some Scene {
         WindowGroup {
             TabView {
-                ContentView<PageItem>()
+                ListView<PageItem>()
                     .environment(model)
                     .tabItem {
                         Label("Strings", systemImage: "s.square")
