@@ -26,8 +26,19 @@ let randomData = RandomData(minimumNumberOfElements: 25)
 
     var body: some Scene {
         WindowGroup {
-            ContentView<PageItem>()
-                .environment(model)
+            TabView {
+                ContentView<PageItem>()
+                    .environment(model)
+                    .tabItem {
+                        Label("Strings", systemImage: "s.square")
+                    }
+
+                ImagesView()
+                    .tabItem {
+                        Label("Pictures", systemImage: "p.square")
+                    }
+            }
+            .toolbarBackground(.visible, for: .bottomBar)
         }
     }
 }
