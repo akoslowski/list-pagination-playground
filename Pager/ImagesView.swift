@@ -41,37 +41,58 @@ struct ImagesView: View {
     @Environment(ImagesModel.self) var model: ImagesModel
 
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .center, spacing: 0, pinnedViews: []) {
-                ForEach(model.state.items) { imageItem in
-                    ZStack(alignment: .bottomLeading) {
-                        AsyncImage(
-                            url: imageItem.downloadURL(
-                                size: .size(
-                                    width: 400,
-                                    height: 400
+        ZStack {
+            ScrollView {
+                LazyVStack(alignment: .center, spacing: 0, pinnedViews: []) {
+                    ForEach(model.state.items) { imageItem in
+                        ZStack(alignment: .bottomLeading) {
+                            AsyncImage(
+                                url: imageItem.downloadURL(
+                                    size: .size(
+                                        width: 400,
+                                        height: 400
+                                    )
                                 )
-                            )
-                        ) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            ProgressView()
-                                .frame(width: 400, height: 400)
+                            ) { image in
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            } placeholder: {
+                                ProgressView()
+                                    .frame(width: 400, height: 400)
+                            }
+                            .frame(maxWidth: .infinity)
+
+                            Text(imageItem.author)
+                                .padding(8)
+                                .background(Capsule().foregroundStyle(.ultraThinMaterial))
+                                .padding()
                         }
                         .frame(maxWidth: .infinity)
-
-                        Text(imageItem.author)
-                            .padding(8)
-                            .background(Capsule().foregroundStyle(.ultraThinMaterial))
-                            .padding()
-                    }
-                    .frame(maxWidth: .infinity)
-                    .task {
-                        await model.reportAppearance(imageItem)
+                        .task {
+                            await model.reportAppearance(imageItem)
+                        }
                     }
                 }
+            }
+
+            if model.state.isLoading, model.state.items.isEmpty {
+                ProgressView("loading")
+                    .padding(24)
+                    .background(
+                        Circle().foregroundStyle(.ultraThinMaterial)
+                    )
+            } else if model.state.items.isEmpty {
+                Text("Nothing here.")
+            }
+
+            if case .error(_, let error) = model.state {
+                ErrorView(error: error)
+                    .onTapGesture {
+                        Task {
+                            await model.load()
+                        }
+                    }
             }
         }
         .task {
