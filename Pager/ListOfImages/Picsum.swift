@@ -108,28 +108,12 @@ public struct Pagination {
 }
 
 public func parsePagination(from string: String) throws -> [Pagination] {
-    try NSRegularExpression(
-        pattern: #"<(?<url>http[|s]://[\d\w].*?)>; rel="(?<rel>[\w].*?)""#,
-        options: []
-    )
-        .matches(
-            in: string,
-            options: [],
-            range: NSRange(location: 0, length: string.utf16.count)
-        )
-        .compactMap { match -> Pagination? in
-            guard
-                let urlString = string.substring(in: match.range(withName: "url")),
-                let relString = string.substring(in: match.range(withName: "rel"))
-            else { return nil }
-
-            return Pagination(urlString: urlString, relString: relString)
+    string
+        .matches(of: /<(?<url>[^;]+)>; rel="(?<rel>[^,]+)"/)
+        .compactMap {
+            (url: String($0.output.url), rel: String($0.output.rel))
         }
-}
-
-private extension String {
-    func substring(in range: NSRange) -> String? {
-        guard let range = Range(range, in: self) else { return nil }
-        return String(self[range])
-    }
+        .compactMap {
+            Pagination(urlString: $0.url, relString: $0.rel)
+        }
 }
