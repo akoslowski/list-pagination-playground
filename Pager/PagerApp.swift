@@ -19,15 +19,29 @@ let randomData = RandomData(minimumNumberOfElements: 25)
         }
     }
 
-    @State var model = Model(
+    @State var listModel = Model(
         moreItems: { randomData().map(PageItem.init) },
         description: { index, value in value.name }
     )
 
+    @State var imagesModel = ImagesModel()
+
     var body: some Scene {
         WindowGroup {
-            ListView<PageItem>()
-                .environment(model)
+            TabView {
+                ListView<PageItem>()
+                    .environment(listModel)
+                    .tabItem {
+                        Label("Strings", systemImage: "s.square")
+                    }
+
+                ImagesView()
+                    .environment(imagesModel)
+                    .tabItem {
+                        Label("Pictures", systemImage: "p.square")
+                    }
+            }
+            .toolbarBackground(.visible, for: .bottomBar)
         }
     }
 }

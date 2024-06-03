@@ -2,7 +2,7 @@ import SwiftUI
 
 func contrastingTextColor(at index: Int) -> Color {
     rowBackgroundColor(at: index)
-        .contrasting(contrastRatio: 4.5)
+        .contrastingTextColor()
 }
 
 func rowBackgroundColor(at index: Int) -> Color {
@@ -23,19 +23,19 @@ extension Color {
 
      Created with Claude 3 Sonnet: https://claude.ai/chat/542af914-751d-441d-8c61-12abb1130070
      */
-    func contrasting(contrastRatio: Double) -> Color {
+    func contrastingTextColor(contrastRatio: Double = 4.5) -> Color {
         let contrastRatio = contrastRatio > 1 ? contrastRatio : 1 / contrastRatio
-        let luminance = luminance()
+        let luminance = makeLuminance(color: self)
         let targetLuminance = luminance > 0.5 ? (luminance + 0.05) / contrastRatio : (luminance + 0.05) * contrastRatio
         return targetLuminance > luminance ? .white : .black
     }
+}
 
-    /// See https://www.w3.org/TR/WCAG20/#relativeluminancedef
-    private func luminance() -> Double {
-        let rgb = cgColor?.components?.map { $0 < 0 ? 0 : $0 } ?? [0, 0, 0]
-        let r = rgb[0]
-        let g = rgb[1]
-        let b = rgb[2]
-        return 0.2126 * r + 0.7152 * g + 0.0722 * b
-    }
+/// See https://www.w3.org/TR/WCAG20/#relativeluminancedef
+private func makeLuminance(color: Color) -> Double {
+    let rgb = color.cgColor?.components?.map { $0 < 0 ? 0 : $0 } ?? [0, 0, 0]
+    let r = rgb[0]
+    let g = rgb[1]
+    let b = rgb[2]
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
